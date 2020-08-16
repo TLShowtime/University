@@ -1,0 +1,90 @@
+Recibos Arreglo de pago
+	- Herencia de recibos
+	- amortización e intereses
+
+-Usuario puede consultar su AP y sus movimientos
+
+Arreglo de Pago
+	Preview(Ventana e confirmacion)
+		- El cliente decide el plazo de meses(parametro)
+
+
+		- Si el usuario no confirma el AP, los recibos deben anularse(2) o cambiar activo
+			- 
+	Dos procesos
+		1) Seleccionar recibos
+		2) Confirmar APs
+
+Todo lo que hay que hacer
+	- Pago de recibos y consulta de comprobantes de pago desde el portal web para los usuarios
+	-creación de arreglos de pago
+	- generación de transacciones y recibos por APs
+
+
+Pagos de recibos por Web
+	1) Selecciona una propiedad
+	2) Selecciona ver recibos pendientes
+	3) Selecciona los que va a pagar
+	4) SPs (crear recibos,intereses moratorios)
+	5) Mostrar ventana de confirmación (Pagar o Cancelar)-> Mostrar los recibos que se generaron antes, El monto total a pgar
+	6) Al pagar se genera el comprobante de pago y cambian los estutus de los recibos
+	En la creación de comprobante se hace TRANSACTION
+
+	Condiciones
+	- En la seleccion tiene que pagar el más antiguo antes del más nuevo
+
+Consulta de comprobantes de pago
+	- (Numero, fecha y monto), del mas nuevo al mas viejo(vENTANA DE COMPORBANTES)
+	- Cuando se da click a un comprobante sale otra ventana con:
+		- numero, fecha, medio de pago, detalle-> todos los recibos que se pagaron con ese comprobante
+
+Creación de arreglos de pago (Administrador, Transaccional)
+	- Botón llamado "Pago mediante AP"
+	Con los recibos seleccionados, aparecerá un botón que indica (pago mediante AP), y al dar click
+	en él, se crea un arreglo de pago, que es una “préstamo” el cual “paga” los recibos pendientes, pero
+	este AP genera recibos por el monto de una cuota para pago de intereses y amortización sobre los
+	“recibos pendientes pagados”
+
+
+	Intereses = 10% -> Tabla de Configuraciones
+	Método frances:
+		R = P [(i (1 + i)n) / ((1 + i)n – 1)]
+	Donde:
+
+	R = renta (cuota)
+
+	P = principal (total a pagar)-> total de recibos e intereses moratorios
+
+	i = tasa de interés
+
+	n = número de periodos
+
+	- El usuario puede ajustar los meses que el desea
+	- Botón de Crear AP, se crea un AP, se crea un comprobatne de pago
+	- Medio de pago-> "AP# 124" numero va a ser el Id del AP
+		- Esto está en la tabla comporbante de pago
+
+	- El AP se paga mediante recibos mensuales (cuotas de AP) que se generan todos los días basado en su día de creación respecto al mes
+
+	Cada mes se genera un movimiento que reduce el saldo del AP 
+	Interés_del_mes = Saldo * tasa_de_Interés/12
+	Amortización = Cuota - Interés_del_mes (descripcion en recibo)
+	Saldo = Saldo - Amortizacion
+
+	Saldo-> total a pagar del AP
+	Cuota-> monto a pagar por mes
+
+	- Se genera un movimiento, se reduce el plazo de meses restantes en 1 y genera un recibo por el monto de la cuota
+		- Descripción de ese recibo
+			-  “Interés mensual:1345.00, amortización: 2655, plazo resta: 32”
+		- Si se pagan despues de vencimiento, intereses moratorios
+
+
+-Cambios en BD
+	- CC -> nueva tabla CCArregloPago
+
+	<AP NumeroFinca=”123”, Plazo=”12”/>
+		- Todos los recibos pendientes, moratorios de todos los CCs a esa propiedad y ...
+		- Transaccional
+
+Cuando se crea en AP, el saldo es 0, pero junto con si creación se crea el primer movimiento, que es un débito por el monto del AP, que aumenta el saldo en ese monto, tal que después de aplicado, el saldo es igual al  monto original del AP. Este movimiento , al ser un débito, no se asocia a ningún recibo. A partir de ese momento, lo típico es que cada mes, en el día que corresponde se genera el movimiento (crédito) que amortiza el saldo y calcula intereses, el cual debe asociarse con un recibo.
